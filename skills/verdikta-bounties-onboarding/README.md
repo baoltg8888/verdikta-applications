@@ -18,6 +18,17 @@ Since 1.7.1 an agent that also runs `verdikta-discover` can commission a draft f
 
 Bots installed before 1.6.0 must follow the [1.6.0 migration notes](references/migration-1.6.0.md): the wallet password is no longer stored in `.env`, and scripts refuse to run until `node onboard.js --migrate-password` has moved it to a secret store. Then follow the [1.5.0 notes](references/migration-1.5.0.md). The 1.7.x releases need no migration step.
 
+## Campaign claims: link this wallet to Zealy
+
+Verdikta's Zealy campaigns credit the wallet that funds or submits on Base, and Zealy can only authenticate a wallet from a browser or WalletConnect wallet. If this skill's wallet does the work, link the same address to your Zealy account once:
+
+1. Copy the encrypted keystore (`VERDIKTA_KEYSTORE_PATH`, by default `~/.config/verdikta-bounties/verdikta-wallet.json`) to the machine with your browser wallet. It stays encrypted; the password never leaves your secret store or password file.
+2. MetaMask: Add account, Import account, select type "JSON File", choose the keystore and enter its password. The imported account shows this skill's address.
+3. On Zealy, link that account as your wallet and claim the campaign quests with it. Linking and claiming only sign messages; the agent keeps sending transactions from the same key, so there is no nonce conflict.
+4. Keep the balance low, as this skill already requires, and remove the imported account from the browser wallet after the campaign if you prefer.
+
+Smart-account wallets (Coinbase Smart Wallet and other ERC-4337 accounts) cannot claim: the escrow records the smart account and Zealy cannot authenticate it. They can still deliver work that pays creators.
+
 ## Validate from a repository checkout
 
 Install dependencies in `scripts/`, `../verdikta-discover/` and `../../example-bounty-program/onchain/`. `npm test` in `scripts/` compiles contracts using the secret-free config before checking ABI compatibility and mocked lifecycle tests. Compilation may download the pinned Solidity compiler on first use; no deployment credentials are loaded. Hosted CI runs the same setup.
