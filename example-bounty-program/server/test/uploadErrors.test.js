@@ -38,6 +38,10 @@ describe.each(ENDPOINTS)('POST %s upload-shape errors', (url) => {
     const res = await request(app()).post(url).field('hunter', HUNTER).attach('files', Buffer.alloc(20 * 1024 * 1024 + 1, 97), 'big.txt');
     expectBadUpload(res, /exceeds the 20MB per-file limit/);
   });
+  it('multipart Content-Type without a boundary → 400, not a 404 for a bounty that exists', async () => {
+    const res = await request(app()).post(url).set('Content-Type', 'multipart/form-data').send('files=x');
+    expectBadUpload(res, /multipart body could not be read: Multipart: Boundary not found/);
+  });
   it('rejected file type → 400', async () => {
     const res = await request(app()).post(url).field('hunter', HUNTER).attach('files', Buffer.from('MZ'), { filename: 'x.exe', contentType: 'application/x-msdownload' });
     expectBadUpload(res, /Invalid file type/);
