@@ -290,21 +290,10 @@ app.get('/api/diagnostics/tmp', (req, res) => {
 
 
 
-// Error handling middleware
+// Error handling middleware: a client mistake (bad JSON, oversized body) gets
+// its own 4xx and a fix; only a genuine server fault is a 500.
 const { sendError, ErrorCodes } = require('./utils/apiErrors');
-app.use((err, req, res, next) => {
-  logger.error('Server error:', err);
-  sendError(res, 500, {
-    code: ErrorCodes.INTERNAL_ERROR,
-    message: 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred',
-    fix: 'Check server health at GET /health. If the problem persists, try again shortly.',
-    tips: [
-      'Check server health: GET /health',
-      'Full docs: GET /api/docs'
-    ]
-  });
-});
+app.use(require('./utils/errorHandler').apiErrorHandler(logger));
 
 // 404 handler
 app.use((req, res) => {

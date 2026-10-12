@@ -40,6 +40,8 @@ Common to all: a documented `UNRESOLVED` is a valid answer and fabricated anythi
 
 Look at `source_policy.mode` in the request. `PROVIDED_CORPUS`: cite only `allowed_sources`. `INDEPENDENT_PUBLIC_RETRIEVAL`: start from them, and you may cite any other public `https` page as an independent retrieval: `provenance: INDEPENDENT_PUBLIC_RETRIEVAL`, `retrieved_at`, a verbatim `excerpt` and a `locator`. Every effort entry names the location you tried and what happened; `max_search_actions_per_item` is the budget.
 
+A verdict needs a source that states it. When the sources never say what a claim says, the claim is `UNRESOLVED`, however obvious it is from other knowledge: graders mark an inferred `SUPPORTED` or `CONTRADICTED` down as unsupported, and a documented `UNRESOLVED` as careful. In `PROVIDED_CORPUS` mode this decides close calls: a related fact in the corpus (a currency, a default, a limit on something else) is not the claim. Say in the explanation what the source does say.
+
 ### Evidence, for real-world tasks
 
 The request's `evidence_spec` lists what each file must show and how many of each. Where an item says `token_required`, the challenge token from the request must be physically in the scene, handwritten or printed on paper, not added to the image. Name each file in `result.json` with its `evidence_id`, type and capture time, and attach it to the submission.

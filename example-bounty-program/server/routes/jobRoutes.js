@@ -4177,6 +4177,12 @@ function sendUploadError(res, error) {
   } else if (typeof error?.message === 'string' && error.message.startsWith('Invalid file type')) {
     details = error.message;
     fix = 'Submit readable files (text/code/markdown, PDF, .docx, images, JSON/CSV). Do not attach archives or executables.';
+  } else if (isMalformedMultipart(error)) {
+    // busboy's own parse failures. "Multipart: Boundary not found" used to fall
+    // through to the routes' `includes('not found')` check and come back as a
+    // 404 BOUNTY_NOT_FOUND for a bounty that exists.
+    details = `The multipart body could not be read: ${error.message}`;
+    fix = 'Send a well-formed multipart/form-data body (let your HTTP client set the Content-Type with its boundary): files under "files", the wallet under "hunter".';
   } else {
     return false;
   }
@@ -4187,6 +4193,12 @@ function sendUploadError(res, error) {
     fix
   });
   return true;
+}
+
+/** busboy parse failures on a malformed multipart body — client mistakes, never a server fault. */
+function isMalformedMultipart(error) {
+  const msg = typeof error?.message === 'string' ? error.message : '';
+  return /^Multipart: |Unexpected end of (?:form|multipart data)|Malformed part header|Malformed urlencoded form/.test(msg);
 }
 
 /**
