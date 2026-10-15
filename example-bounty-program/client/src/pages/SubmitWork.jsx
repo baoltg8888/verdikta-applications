@@ -541,8 +541,13 @@ function SubmitWork({ walletState }) {
     } catch (err) {
       console.error('Error submitting work:', err);
 
-      // Better error messages for common issues
-      let errorMessage = err.message || 'Failed to submit work';
+      // Better error messages for common issues. A rejected upload carries the
+      // server's reason and fix (e.g. an oversized image) — show those, not axios's
+      // "Request failed with status code 400".
+      const apiError = err.response?.data;
+      let errorMessage = apiError?.details || apiError?.error
+        ? [apiError.details || apiError.error, apiError.fix].filter(Boolean).join(' — ')
+        : err.message || 'Failed to submit work';
       const originalError = errorMessage; // Keep original for logging
 
       if (errorMessage.includes('insufficient funds for gas') ||

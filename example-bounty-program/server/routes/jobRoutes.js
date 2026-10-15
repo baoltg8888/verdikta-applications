@@ -19,6 +19,7 @@ const { packageRubricHash } = require('../utils/rubricSource');
 const { config } = require('../config');
 const archiveGenerator = require('../utils/archiveGenerator');
 const archiveShapeValidator = require('../utils/archiveShapeValidator');
+const { findOversizedImages, OVERSIZED_IMAGE_FIX } = require('../utils/imageLimits');
 const { validateRubric, validateJuryNodes, normalizeBountyPayments, validateProcurement, isValidFileType, MAX_FILE_SIZE,
         oracleUnreadableReason, detectBinaryContainer, ALLOWED_ZIP_BASED_EXTENSIONS,
         parseFeeToWei, extractEvaluationWarnings } = require('../utils/validation');
@@ -4364,6 +4365,20 @@ router.post('/:jobId/submit/dry-run', async (req, res) => {
       } else {
         checks.push({ name: 'oracle_readable', passed: true, details: 'All attachments are in oracle-readable formats' });
       }
+
+      // ---- 3c. image_size (oversized images fail every jury model → ORACLE_TIMEOUT) ----
+      const oversized = await findOversizedImages(uploadedFiles);
+      if (oversized.length > 0) {
+        checks.push({ name: 'image_size', passed: false, details: oversized.join('; ') });
+        errors.push({
+          code: 'SUBMISSION_IMAGE_TOO_LARGE',
+          message: 'One or more images are too large for the AI models to read',
+          details: oversized.join('; '),
+          fix: OVERSIZED_IMAGE_FIX
+        });
+      } else {
+        checks.push({ name: 'image_size', passed: true, details: 'All images are within the AI models\' size limits' });
+      }
     }
 
     // ---- 4. hunter_address ----
@@ -4708,6 +4723,15 @@ router.post('/:jobId/submit', async (req, res) => {
         message: 'Attachment is an archive/binary the oracle cannot read',
         details: unreadable.join('; '),
         fix: 'Do NOT zip or archive the deliverable — the oracle skips archive/binary attachments and scores the submission 0. Submit readable files (text/code/markdown, PDF, .docx, images); unpack archives and attach the individual files. Use POST /api/jobs/:id/submit/dry-run to pre-check.'
+      });
+    }
+    const oversized = await findOversizedImages(uploadedFiles);
+    if (oversized.length > 0) {
+      return sendError(res, 400, {
+        code: ErrorCodes.VALIDATION_INVALID_FORMAT,
+        message: 'Image is too large for the AI models to read',
+        details: oversized.join('; '),
+        fix: `${OVERSIZED_IMAGE_FIX} Use POST /api/jobs/:id/submit/dry-run to pre-check.`
       });
     }
 
@@ -5169,6 +5193,15 @@ router.post('/:jobId/submit/bundle', async (req, res) => {
           message: 'Attachment is an archive/binary the oracle cannot read',
           details: unreadable.join('; '),
           fix: 'Do NOT zip or archive the deliverable — the oracle skips archive/binary attachments and scores the submission 0. Submit readable files (text/code/markdown, PDF, .docx, images); unpack archives and attach the individual files. Use POST /api/jobs/:id/submit/dry-run to pre-check.'
+        });
+      }
+      const oversized = await findOversizedImages(uploadedFiles);
+      if (oversized.length > 0) {
+        return sendError(res, 400, {
+          code: ErrorCodes.VALIDATION_INVALID_FORMAT,
+          message: 'Image is too large for the AI models to read',
+          details: oversized.join('; '),
+          fix: `${OVERSIZED_IMAGE_FIX} Use POST /api/jobs/:id/submit/dry-run to pre-check.`
         });
       }
       const fileDescriptions = (() => {

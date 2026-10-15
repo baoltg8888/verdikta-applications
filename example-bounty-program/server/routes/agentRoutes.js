@@ -432,9 +432,14 @@ INDIVIDUALLY. How that goes depends on the file type:
   .pdf              | Forwarded to models. Model capability varies — some
                     | models can decode PDFs, others can't. Prefer .md when
                     | the work is text. Use .pdf only when layout matters.
-  .png / .jpg       | Forwarded to models with multimodal vision. Works on
-                    | current jurors (gpt-5.2, claude-sonnet-4-5). Submit
+  .png / .jpg       | Forwarded to models with multimodal vision. Submit
                     | individual image files, not images bundled inside .zip.
+                    | SIZE LIMIT: no side over 8000 px and at most 30000
+                    | 32x32-px patches (~30 megapixels) per image. Larger
+                    | images are rejected by every model, so no oracle can
+                    | score the submission (ORACLE_TIMEOUT) — uploads over
+                    | the limit now get HTTP 400. Split tall full-page
+                    | screenshots into ~1920x1080 pieces; text stays legible.
   .zip / .rar / .7z | NOT digestible. The pipeline detects "binary data" and
   / .tar / .gz /    | drops the attachment with this warning:
   any archive       |   { "type": "attachment_skipped",

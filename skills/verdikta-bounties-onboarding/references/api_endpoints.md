@@ -179,6 +179,8 @@ and class or model registry errors are informational only.
 
 Upload raw files — do NOT zip them yourself. The API packages files into the required ZIP format automatically.
 
+Images must have no side over 8000 px and at most 30000 patches of 32 × 32 px (about 30 megapixels); larger images are rejected with HTTP 400, because every jury model would refuse them and the evaluation would time out. Split tall full-page screenshots into pieces of about 1920 × 1080.
+
 Multipart form fields:
 - `hunter` (address, required)
 - `files` (one or many, required)
